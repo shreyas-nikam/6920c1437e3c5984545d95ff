@@ -1,12 +1,10 @@
 
-# Streamlit Application Requirements Specification: Financial Asset Grouping
+# Streamlit Application Requirements Specification
 
 ## 1. Application Overview
 
-This Streamlit application, "Cluster Navigator: Financial Asset Grouping," is designed as an interactive tool for Financial Data Engineers and data scientists. It provides a hands-on experience in applying and evaluating unsupervised clustering techniques to synthetic financial asset data.
-
 ### Learning Goals
-Upon completion, users will be able to:
+This Streamlit application will provide Financial Data Engineers with an interactive tool to explore and apply unsupervised clustering techniques—specifically k-Means and Hierarchical Clustering—to financial asset data. Upon completion, users will be able to:
 *   Understand the principles and mechanics of k-Means and Hierarchical Clustering algorithms.
 *   Generate and preprocess synthetic financial asset data suitable for clustering.
 *   Implement k-Means clustering and interactively adjust the number of clusters ($k$).
@@ -18,74 +16,51 @@ Upon completion, users will be able to:
 ## 2. User Interface Requirements
 
 ### Layout and Navigation Structure
-The application will use a clear, sectioned layout in Streamlit:
-*   **Sidebar:** Will host global controls like data generation parameters and potentially navigation links for major sections (Introduction, k-Means, Hierarchical Clustering, Evaluation).
-*   **Main Content Area:** Will display markdown explanations, interactive widgets, and visualizations sequentially based on the chosen section or logical flow.
-    *   **Introduction & Setup:** Initial section with overview, learning goals, and library imports.
-    *   **Data Generation & Preprocessing:** Section for generating and scaling data.
-    *   **k-Means Clustering:** Dedicated section with parameters, execution, and visualization.
-    *   **Hierarchical Clustering:** Dedicated section with parameters, execution, and visualization.
-    *   **Evaluation Metrics:** Section displaying clustering quality metrics for both algorithms.
-    *   **Financial Applications:** Concluding section discussing practical uses.
+The application will follow a linear, top-to-bottom layout in Streamlit, mirroring the logical flow of the Jupyter Notebook. Each major section will be introduced with a clear heading. Key interactive controls will be placed prominently near the relevant sections.
 
 ### Input Widgets and Controls
-The application will feature interactive widgets for user input:
+*   **General:**
+    *   A 'Generate Data' button could trigger the synthetic data generation (though in Streamlit, simply running the script will generate it).
+*   **k-Means Clustering:**
+    *   **Number of Clusters ($k$) Slider:** A slider (`st.slider`) allowing users to select an integer value for $k$ from 2 to 7 (defaulting to 4).
+*   **Hierarchical Clustering:**
+    *   **Linkage Method Dropdown:** A dropdown menu (`st.selectbox`) to choose from 'ward', 'complete', 'average', 'single' linkage methods (defaulting to 'ward').
+    *   **Number of Clusters ($n$) Slider:** A slider (`st.slider`) for `n_clusters_hc` from 2 to 7 (defaulting to 4). This parameter is used by `AgglomerativeClustering` for label generation, distinct from the dendrogram cutoff.
+    *   **Cutoff Distance Slider:** A slider (`st.slider`) for `cutoff_distance` ranging from 0 to 15 with a step of 0.5 (defaulting to 6.0) for dendrogram visualization.
 
-**A. Data Generation Parameters (in Sidebar or initial section):**
-*   **Number of Samples (`n_samples`):** `st.slider` (e.g., min=50, max=500, step=10, default=100)
-*   **Number of Features (`n_features`):** `st.slider` (e.g., min=2, max=5, step=1, default=3)
-*   **Number of True Clusters (`n_clusters_true` for make_blobs):** `st.slider` (e.g., min=2, max=7, step=1, default=4)
-*   **Cluster Standard Deviation (`cluster_std`):** `st.slider` (e.g., min=0.5, max=2.0, step=0.1, default=0.8)
-*   **Random State (`random_state`):** `st.number_input` (e.g., min=0, default=42)
-
-**B. k-Means Clustering Parameters (in k-Means section):**
-*   **Number of Clusters (k):** `st.slider`
-    *   `min=2, max=7, step=1, value=4, label='Number of Clusters (k):'`
-
-**C. Hierarchical Clustering Parameters (in Hierarchical Clustering section):**
-*   **Number of Clusters (n):** `st.slider` (for `AgglomerativeClustering` `n_clusters` parameter)
-    *   `min=2, max=7, step=1, value=4, label='Number of Clusters (n):'`
-*   **Linkage Method:** `st.selectbox`
-    *   `options=('ward', 'complete', 'average', 'single'), value='ward', label='Linkage Method:'`
-*   **Dendrogram Cutoff Distance:** `st.slider` (for visualization only)
-    *   `min=0, max=15, step=0.5, value=6.0, label='Dendrogram Cutoff Distance:'`
-
-### Visualization Components
+### Visualization Components (Charts, Graphs, Tables)
+*   **Data Preview:**
+    *   `financial_df.head()`: Displayed as an interactive table (`st.dataframe`).
+    *   `financial_df.shape`: Displayed as text (`st.write`).
+    *   `scaled_financial_df.head()`: Displayed as an interactive table (`st.dataframe`).
+    *   `scaled_financial_df.describe().loc[['mean', 'std']]`: Displayed as an interactive table (`st.dataframe`).
 *   **k-Means Scatter Plot:**
-    *   Interactive scatter plot (using `plotly.express`).
-    *   Displays assets colored by assigned cluster.
-    *   Cluster centroids are clearly marked with 'X' symbols.
-    *   Axes will be "Scaled Feature 1" and "Scaled Feature 2."
-*   **Hierarchical Clustering Dendrogram:**
-    *   Static dendrogram (using `matplotlib.pyplot` and `scipy.cluster.hierarchy`).
-    *   Illustrates the merging process of clusters.
-    *   Includes a dynamic red dashed horizontal line representing the `cutoff_distance` for cluster definition.
-    *   Leaf labels will be `Asset_ID`.
+    *   An interactive scatter plot (`st.plotly_chart`) showing assets colored by their assigned cluster and 'X' markers for cluster centroids. Features 'Feature_1' and 'Feature_2' will be used for the axes. This visualization is analogous to Exhibit 1 in the provided text.
+*   **Hierarchical Dendrogram:**
+    *   A static dendrogram plot (`st.pyplot`) with a dynamic red horizontal line representing the user-selected `cutoff_distance`. The dendrogram should color clusters below the threshold differently. This visualization is analogous to Exhibit 2.
+*   **Evaluation Metrics:**
+    *   Numerical display of Silhouette Score and Adjusted Rand Index for both k-Means and Hierarchical Clustering (`st.write`).
+    *   A comparative table (`st.write` or `st.dataframe`) summarizing the Silhouette Score and ARI for both algorithms.
 
 ### Interactive Elements and Feedback Mechanisms
-*   **Dynamic Plot Updates:** All plots will automatically re-render when their associated input widgets are changed.
-*   **Execution Messages:** Informative messages will be displayed upon execution of clustering algorithms (e.g., "k-Means clustering performed with k=X").
-*   **Tooltips and Hover Information:**
-    *   `plotly.express` plots will provide hover details for `Asset_ID` and centroids.
-    *   Dendrogram leaf labels will show `Asset_ID`.
-*   **Evaluation Metrics Display:** Numerical values for Silhouette Score and Adjusted Rand Index will be displayed clearly after each clustering run.
+*   **Live Updates:** All plots and metric displays will automatically update in real-time as users adjust the slider or dropdown widget values.
+*   **Textual Feedback:** Intermediate results, such as the first 10 cluster labels, selected parameters, and centroid shapes, will be displayed as text (`st.write` or `st.text`) to provide immediate feedback on model execution.
 
 ## 3. Additional Requirements
 
-*   **Annotation and Tooltip Specifications:**
-    *   All plots (`plotly.express` and `matplotlib`) must include appropriate titles, axis labels, and legends.
-    *   k-Means scatter plot: Hover over data points to show `Asset_ID`. Hover over centroids to show "Centroid X".
-    *   Hierarchical dendrogram: `Asset_ID` as leaf labels. A legend for the "Cutoff Distance" line.
-*   **Save the states of the fields properly so that changes are not lost:**
-    *   All user input from `st.slider`, `st.selectbox`, and `st.number_input` widgets must leverage `st.session_state` to ensure their values persist across rerun events, maintaining the user's selected parameters. This includes parameters for data generation, k-Means, and Hierarchical Clustering.
+### Annotation and Tooltip Specifications
+*   **k-Means Scatter Plot:** Hovering over data points should display the `Asset_ID`. Hovering over centroids should display 'Centroid X' (where X is the centroid index).
+*   **Dendrogram:** The horizontal cutoff line should be labeled with its current distance value (e.g., 'Cutoff at 6.00').
+*   **Markdown Explanations:** Extensive markdown content from the Jupyter Notebook will be used throughout the Streamlit application as annotations, providing context, theoretical background, and financial interpretations.
+
+### Save the States of the Fields Properly So That Changes Are Not Lost
+All critical user inputs (e.g., `k` for k-Means, `linkage_method`, `n_clusters_hc`, `cutoff_distance` for Hierarchical Clustering) and computed results (e.g., `financial_df`, `scaled_financial_df`, `y_true_labels`, `kmeans_labels`, `kmeans_centroids`, `hclust_labels`, `linkage_matrix_hc`) will be stored and retrieved using `st.session_state`. This ensures that the application's state persists across reruns caused by user interactions.
 
 ## 4. Notebook Content and Code Requirements
 
-This section outlines the integration of the Jupyter Notebook's markdown and code into the Streamlit application. Each major section of the notebook will correspond to a logical section or series of `st.markdown` and code blocks in Streamlit.
+This section outlines how the Jupyter Notebook content will be integrated into the Streamlit application, including code stubs and markdown.
 
-### 4.1. Application Introduction and Setup
-
-**Streamlit Content:**
+### Setup and Library Imports
 ```python
 import streamlit as st
 import pandas as pd
@@ -98,15 +73,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.cluster.hierarchy import linkage, dendrogram
 import plotly.express as px
-# Note: ipywidgets and IPython.display are Jupyter-specific and not used in Streamlit directly.
+# ipywidgets is for Jupyter Notebook, not needed in Streamlit
+# from IPython.display import display # Not needed in Streamlit
+```
+**Usage in Streamlit:** These imports will be at the top of the `app.py` file.
 
-st.set_page_config(layout="wide", page_title="Cluster Navigator: Financial Asset Grouping")
-
-st.title("Cluster Navigator: Financial Asset Grouping")
-
+### 1. Notebook Overview (Markdown)
+```python
+st.title("Unsupervised Learning for Financial Asset Grouping")
+st.header("1. Notebook Overview")
 st.markdown("""
 ### Learning Goals
-This application aims to provide Financial Data Engineers with a hands-on, interactive experience in exploring and applying unsupervised clustering techniques—specifically k-Means and Hierarchical Clustering—to financial asset data. Upon completion, users will be able to:
+This Streamlit application aims to provide Financial Data Engineers with a hands-on, interactive experience in exploring and applying unsupervised clustering techniques—specifically k-Means and Hierarchical Clustering—to financial asset data. Upon completion, users will be able to:
 *   Understand the principles and mechanics of k-Means and Hierarchical Clustering algorithms.
 *   Generate and preprocess synthetic financial asset data suitable for clustering.
 *   Implement k-Means clustering and interactively adjust the number of clusters ($k$).
@@ -118,7 +96,10 @@ This application aims to provide Financial Data Engineers with a hands-on, inter
 ### Who the application is targeted to
 This application is targeted towards **Financial Data Engineers** and data scientists with an interest in applying machine learning to financial markets. The content assumes a foundational understanding of data analysis and basic Python programming.
 """)
+```
 
+### Section 1: Introduction to Financial Asset Grouping (Markdown)
+```python
 st.header("Section 1: Introduction to Financial Asset Grouping")
 st.markdown("""
 Unsupervised learning techniques are powerful tools for uncovering hidden structures and patterns within data without relying on predefined labels. In the realm of finance, where "ground truth" labels for complex phenomena like market regimes or asset correlations are often elusive or expensive to obtain, unsupervised methods are invaluable.
@@ -127,7 +108,10 @@ Clustering, a prominent unsupervised technique, groups similar data points toget
 
 This application will focus on two fundamental clustering algorithms: **k-Means Clustering** and **Hierarchical Clustering**. We will explore their mechanisms, apply them to synthetic financial asset data, visualize their results, and evaluate their effectiveness using established metrics.
 """)
+```
 
+### Section 2: Learning Objectives (Markdown)
+```python
 st.header("Section 2: Learning Objectives")
 st.markdown("""
 By the end of this interactive application, you will be able to:
@@ -139,16 +123,16 @@ By the end of this interactive application, you will be able to:
 *   Calculate and understand the **Silhouette Score** and **Adjusted Rand Index (ARI)** for evaluating clustering quality.
 *   Discuss the practical implications of these clustering techniques in financial contexts, such as optimizing portfolio diversification through strategies like Hierarchical Risk Parity (HRP) and enhancing portfolio construction.
 """)
-
-st.header("Section 3: Setup and Library Imports")
-st.markdown("""
-All required libraries have been successfully loaded. We are now ready to proceed with generating and analyzing our financial asset data.
-""")
 ```
 
-### 4.2. Synthetic Financial Asset Data Generation
+### Section 3: Setup and Library Imports (Markdown)
+```python
+st.header("Section 3: Setup and Library Imports")
+st.markdown("All required libraries have been successfully loaded. We are now ready to proceed with generating and analyzing our financial asset data.")
+```
 
-**Streamlit Content:**
+### Section 4: Synthetic Financial Asset Data Generation
+**Markdown:**
 ```python
 st.header("Section 4: Synthetic Financial Asset Data Generation")
 st.markdown("""
@@ -160,80 +144,56 @@ Each asset will have a unique `Asset_ID` and a set of continuous numerical featu
 *   `Feature_3`: Represents `Beta_to_Market`.
 These features are chosen to reflect common characteristics used in financial analysis and portfolio management.
 """)
-
-# Code Stub: generate_financial_data function
-def generate_financial_data(n_samples, n_features, n_clusters_true, cluster_std, random_state):
+```
+**Code for Data Generation:**
+```python
+# Function Definition
+def generate_financial_data(n_samples, n_features, n_clusters, cluster_std, random_state):
     """
     Generates a synthetic dataset of financial asset features.
     """
     X, y_true = make_blobs(n_samples=n_samples, n_features=n_features, 
-                           centers=n_clusters_true, cluster_std=cluster_std, 
-                           random_state=random_state)
+                           centers=n_clusters, cluster_std=cluster_std, random_state=random_state)
     
-    feature_names = [f'Feature_{i+1}' for i in range(n_features)]
-    financial_df = pd.DataFrame(X, columns=feature_names)
-    financial_df['Asset_ID'] = [f'Asset_{i}' for i in range(n_samples)]
-    financial_df['True_Cluster'] = y_true
+    df = pd.DataFrame(X, columns=[f'Feature_{i+1}' for i in range(n_features)])
+    df['Asset_ID'] = [f'Asset_{i}' for i in range(n_samples)]
+    df['True_Cluster'] = y_true
     
     # Reorder columns to have Asset_ID first
-    financial_df = financial_df[['Asset_ID'] + feature_names + ['True_Cluster']]
+    df = df[['Asset_ID'] + [f'Feature_{i+1}' for i in range(n_features)] + ['True_Cluster']]
     
-    return financial_df, y_true
+    return df, y_true
 
-# Streamlit Widgets for Data Generation (using st.session_state)
-st.sidebar.subheader("Data Generation Parameters")
-if 'n_samples' not in st.session_state:
-    st.session_state.n_samples = 100
-if 'n_features' not in st.session_state:
-    st.session_state.n_features = 3
-if 'n_clusters_true' not in st.session_state:
-    st.session_state.n_clusters_true = 4
-if 'cluster_std' not in st.session_state:
-    st.session_state.cluster_std = 0.8
-if 'random_state_data' not in st.session_state:
-    st.session_state.random_state_data = 42
+# Streamlit Usage: Generate and store data in session state
+if 'financial_df' not in st.session_state:
+    st.session_state.financial_df, st.session_state.y_true_labels = generate_financial_data(n_samples=100, n_features=3, n_clusters=4, cluster_std=0.8, random_state=42)
 
-st.session_state.n_samples = st.sidebar.slider('Number of Assets', min_value=50, max_value=500, step=10, key='n_samples')
-st.session_state.n_features = st.sidebar.slider('Number of Features', min_value=2, max_value=5, step=1, key='n_features')
-st.session_state.n_clusters_true = st.sidebar.slider('True Latent Clusters', min_value=2, max_value=7, step=1, key='n_clusters_true')
-st.session_state.cluster_std = st.sidebar.slider('Cluster Standard Deviation', min_value=0.5, max_value=2.0, step=0.1, key='cluster_std')
-st.session_state.random_state_data = st.sidebar.number_input('Random State for Data', min_value=0, key='random_state_data')
-
-# Call the function with Streamlit widget values
-financial_df, y_true_labels = generate_financial_data(
-    n_samples=st.session_state.n_samples, 
-    n_features=st.session_state.n_features, 
-    n_clusters_true=st.session_state.n_clusters_true, 
-    cluster_std=st.session_state.cluster_std, 
-    random_state=st.session_state.random_state_data
-)
-
-st.subheader("Generated Financial Data Overview")
-st.write("First 5 rows of the generated financial data:")
-st.dataframe(financial_df.head())
-st.write(f"Shape of the financial DataFrame: {financial_df.shape}")
+st.subheader("Generated Financial Data Sample:")
+st.dataframe(st.session_state.financial_df.head())
+st.write(f"Shape of generated data: {st.session_state.financial_df.shape}")
 
 st.markdown("""
-We have successfully generated a synthetic dataset consisting of **{}** financial assets, each characterized by **{}** distinct features. The `True_Cluster` column represents the latent groups that `make_blobs` created, which we will use as a benchmark for some of our evaluation metrics. This dataset will serve as our input for exploring various clustering algorithms.
-""".format(st.session_state.n_samples, st.session_state.n_features))
+We have successfully generated a synthetic dataset consisting of 100 financial assets, each characterized by three distinct features (`Daily_Return_Volatility`, `Average_Daily_Return`, `Beta_to_Market`). The `True_Cluster` column represents the latent groups that `make_blobs` created, which we will use as a benchmark for some of our evaluation metrics. This dataset will serve as our input for exploring various clustering algorithms.
+""")
 ```
 
-### 4.3. Data Preprocessing: Scaling Features
-
-**Streamlit Content:**
+### Section 5: Data Preprocessing: Scaling Features
+**Markdown:**
 ```python
 st.header("Section 5: Data Preprocessing: Scaling Features")
-st.markdown(r"""
+st.markdown("""
 Many clustering algorithms, particularly those based on distance metrics like k-Means and Hierarchical Clustering, are sensitive to the scale of the input features. Features with larger numerical ranges can disproportionately influence the distance calculations, leading to biased clustering results. To mitigate this, it's a standard practice to scale the features so that they all contribute equally to the distance computations.
 
 We will use `StandardScaler` from `sklearn.preprocessing`, which transforms the data such that each feature has a mean of 0 and a standard deviation of 1 (unit variance). The formula for standardization for a data point $x$ and feature $j$ is:
-$$
-z_j = \\frac{x_j - \\mu_j}{\\sigma_j}
+$$ 
+    z_j = \\frac{x_j - \\mu_j}{\\sigma_j}
 $$
 where $\\mu_j$ is the mean of feature $j$ and $\\sigma_j$ is its standard deviation.
 """)
-
-# Code Stub: scale_features function
+```
+**Code for Scaling Features:**
+```python
+# Function Definition
 def scale_features(dataframe):
     """
     Scales numerical features using StandardScaler.
@@ -243,45 +203,49 @@ def scale_features(dataframe):
     scaled_df = pd.DataFrame(scaled_data, columns=dataframe.columns)
     return scaled_df
 
-feature_columns = [f'Feature_{i+1}' for i in range(st.session_state.n_features)]
-scaled_financial_df = scale_features(financial_df[feature_columns])
+# Streamlit Usage: Scale features and store in session state
+if 'scaled_financial_df' not in st.session_state:
+    feature_columns = ['Feature_1', 'Feature_2', 'Feature_3']
+    st.session_state.scaled_financial_df = scale_features(st.session_state.financial_df[feature_columns])
 
-st.subheader("Scaled Financial Data Overview")
-st.write("First 5 rows of the scaled financial data:")
-st.dataframe(scaled_financial_df.head())
-st.write("\nMean of scaled features:")
-st.dataframe(scaled_financial_df.mean().to_frame().T)
-st.write("\nStandard deviation of scaled features:")
-st.dataframe(scaled_financial_df.std().to_frame().T)
+st.subheader("Scaled Financial Data Sample:")
+st.dataframe(st.session_state.scaled_financial_df.head())
+st.write("Description of Scaled Features (Mean and Std Dev):")
+st.dataframe(st.session_state.scaled_financial_df.describe().loc[['mean', 'std']])
 
 st.markdown("""
 The financial asset features have now been standardized, meaning each feature has a mean of approximately 0 and a standard deviation of 1. This ensures that no single feature dominates the clustering process due to its scale, allowing our distance-based algorithms to identify clusters based on the inherent relationships between features more accurately.
 """)
 ```
 
-### 4.4. k-Means Clustering
-
-**Streamlit Content:**
+### Section 6: Introduction to k-Means Clustering
+**Markdown:**
 ```python
 st.header("Section 6: Introduction to k-Means Clustering")
-st.markdown(r"""
+st.markdown("""
 k-Means is one of the most widely used unsupervised clustering algorithms, known for its simplicity and efficiency. The core idea behind k-Means is to partition $n$ data points into $k$ distinct clusters, where each data point belongs to the cluster with the nearest mean (centroid).
 
-The algorithm follows an iterative approach:
+The algorithm follows an iterative approach, as outlined in Figure 1 of the provided text:
 1.  **Initialization**: Randomly select $k$ centroids.
-2.  **Assignment Step**: Assign each data point to the cluster whose centroid is closest (e.g., using Euclidean distance $d(x_i, \\mu_j)$).
+2.  **Assignment Step**: Assign each data point to the cluster whose centroid is closest (e.g., using Euclidean distance).
 3.  **Update Step**: Recalculate the centroids as the mean of all data points assigned to that cluster.
 4.  **Convergence**: Repeat steps 2 and 3 until the centroids no longer change significantly or a maximum number of iterations is reached.
 
-A key characteristic of k-Means is the requirement to pre-specify the number of clusters, $k$. In financial applications, k-Means can be used to group stocks based on continuous trend characteristics for portfolio construction, as highlighted by Wu, Wang, and Wu (2022). This can help in identifying groups of assets that behave similarly, aiding in diversification and risk management.
+A key characteristic of k-Means is the requirement to pre-specify the number of clusters, $k$. In financial applications, k-Means can be used to group stocks based on continuous trend characteristics for portfolio construction, as highlighted by Wu, Wang, and Wu (2022) [1]. This can help in identifying groups of assets that behave similarly, aiding in diversification and risk management.
 """)
+```
 
+### Section 7: Implementing k-Means Clustering
+**Markdown:**
+```python
 st.header("Section 7: Implementing k-Means Clustering")
 st.markdown("""
 We will now apply the k-Means algorithm to our scaled financial data. We'll use `sklearn.cluster.KMeans` for this. A crucial aspect of k-Means is selecting the appropriate number of clusters, $k$. We will use an interactive slider to allow you to easily adjust $k$ and observe its impact on the clustering results.
 """)
-
-# Code Stub: perform_kmeans_clustering function
+```
+**Code for k-Means Implementation:**
+```python
+# Function Definition
 def perform_kmeans_clustering(scaled_data, n_clusters_input, random_state):
     """
     Executes k-Means clustering and returns labels and centroids.
@@ -290,284 +254,446 @@ def perform_kmeans_clustering(scaled_data, n_clusters_input, random_state):
     kmeans.fit(scaled_data)
     return kmeans.labels_, kmeans.cluster_centers_
 
-# Streamlit Widget for k-Means (using st.session_state)
-st.subheader("k-Means Parameters")
-if 'k_clusters' not in st.session_state:
-    st.session_state.k_clusters = 4
-if 'random_state_kmeans' not in st.session_state:
-    st.session_state.random_state_kmeans = 42
-
-st.session_state.k_clusters = st.slider(
-    'Number of Clusters (k):', 
-    min_value=2, 
-    max_value=7, 
-    step=1, 
-    key='k_clusters'
+# Streamlit Usage: Interactive k-Means
+n_clusters_k = st.slider(
+    'Number of Clusters (k) for k-Means:',
+    min_value=2,
+    max_value=7,
+    value=st.session_state.get('k_kmeans_value', 4), # Preserve state
+    step=1,
+    key='k_kmeans_slider'
 )
-st.session_state.random_state_kmeans = st.number_input('Random State for k-Means', min_value=0, key='random_state_kmeans')
+st.session_state.k_kmeans_value = n_clusters_k # Update session state
 
+if st.button("Run k-Means Clustering"): # Added a button for explicit execution, though a direct update on slider change is also possible
+    kmeans_labels, kmeans_centroids = perform_kmeans_clustering(st.session_state.scaled_financial_df, n_clusters_k, random_state=42)
+    st.session_state.kmeans_labels = kmeans_labels
+    st.session_state.kmeans_centroids = kmeans_centroids
+    
+    st.subheader("k-Means Clustering Results:")
+    st.write(f"k-Means Labels (first 10): {st.session_state.kmeans_labels[:10]}")
+    st.write(f"k-Means Centroids (shape): {st.session_state.kmeans_centroids.shape}")
+    st.write(f"k-Means Centroids:\n{st.session_state.kmeans_centroids}")
+else: # If results exist from previous runs, display them
+    if 'kmeans_labels' in st.session_state and 'kmeans_centroids' in st.session_state:
+        st.subheader("k-Means Clustering Results (from last run):")
+        st.write(f"k-Means Labels (first 10): {st.session_state.kmeans_labels[:10]}")
+        st.write(f"k-Means Centroids (shape): {st.session_state.kmeans_centroids.shape}")
+        st.write(f"k-Means Centroids:\n{st.session_state.kmeans_centroids}")
+    else:
+        st.info("Adjust the slider and click 'Run k-Means Clustering' to see results.")
 
-# Perform k-Means Clustering
-kmeans_labels, kmeans_centroids = perform_kmeans_clustering(
-    scaled_financial_df, 
-    st.session_state.k_clusters, 
-    random_state=st.session_state.random_state_kmeans
-)
-st.info(f"k-Means clustering performed with k={st.session_state.k_clusters}")
+st.markdown("""
+The k-Means algorithm has now been applied to our scaled financial data. By adjusting the `Number of Clusters (k)` slider, you can observe how assets are grouped into different clusters. The displayed labels show which cluster each asset belongs to, and the centroids represent the central point of each identified cluster in the feature space. These labels will be used for visualization and evaluation.
+""")
+```
 
-st.subheader("k-Means Clustering Results")
-st.write("First 10 k-Means cluster labels:")
-st.write(kmeans_labels[:10])
-st.write("\nk-Means cluster centroids:")
-st.dataframe(pd.DataFrame(kmeans_centroids, columns=feature_columns))
-
-
+### Section 8: Visualizing k-Means Clusters
+**Markdown:**
+```python
 st.header("Section 8: Visualizing k-Means Clusters")
 st.markdown("""
-Visualizing clustering results is crucial for understanding the separation and characteristics of the identified groups. For k-Means, a scatter plot is particularly effective, allowing us to see how assets are distributed in a 2D feature space and how the cluster centroids relate to these groupings. We will use `plotly.express` for an interactive visualization.
+Visualizing clustering results is crucial for understanding the separation and characteristics of the identified groups. For k-Means, a scatter plot is particularly effective, allowing us to see how assets are distributed in a 2D feature space and how the cluster centroids relate to these groupings (similar to Exhibit 1 in the provided text). We will use `plotly.express` for an interactive visualization.
 """)
-
-# Code Stub: plot_kmeans_clusters function
+```
+**Code for k-Means Visualization:**
+```python
+# Function Definition
 def plot_kmeans_clusters(original_data, scaled_data, cluster_labels, centroids, feature_x, feature_y):
     """
     Generates an interactive scatter plot for k-Means results.
     """
     plot_df = scaled_data.copy()
     plot_df['Asset_ID'] = original_data['Asset_ID']
-    plot_df['Cluster'] = cluster_labels.astype(str) # Plotly express needs string for discrete colors
-    
-    # Create a DataFrame for centroids
-    centroids_df = pd.DataFrame(centroids, columns=scaled_data.columns)
-    centroids_df['Cluster'] = [f'Centroid {i}' for i in range(len(centroids))]
+    plot_df['Cluster'] = cluster_labels
 
     # Plot assets
-    fig = px.scatter(plot_df, 
-                     x=feature_x, 
-                     y=feature_y, 
-                     color='Cluster', 
-                     hover_name='Asset_ID', 
-                     title='k-Means Clustering of Financial Assets',
-                     labels={feature_x: f'Scaled {feature_x}', feature_y: f'Scaled {feature_y}'})
-    
-    # Add centroids as distinct markers
-    fig.add_scatter(x=centroids_df[feature_x], 
-                    y=centroids_df[feature_y], 
-                    mode='markers', 
-                    marker=dict(symbol='x', size=15, color='black', line=dict(width=2)), 
-                    name='Centroids',
-                    hoverinfo='text',
-                    hovertext=[f"Centroid {i}" for i in range(len(centroids))])
-    
-    st.plotly_chart(fig, use_container_width=True)
+    fig = px.scatter(
+        plot_df,
+        x=feature_x,
+        y=feature_y,
+        color=plot_df['Cluster'].astype(str), # Convert to string for discrete colors
+        hover_name='Asset_ID',
+        title='k-Means Clustering of Financial Assets',
+        labels={feature_x: f'{feature_x} (Scaled)', feature_y: f'{feature_y} (Scaled)'}
+    )
 
-# Plot k-Means Clusters
-plot_kmeans_clusters(
-    original_data=financial_df,
-    scaled_data=scaled_financial_df,
-    cluster_labels=kmeans_labels,
-    centroids=kmeans_centroids,
-    feature_x='Feature_1',
-    feature_y='Feature_2'
-)
+    # Add centroids
+    centroids_df = pd.DataFrame(centroids, columns=scaled_data.columns)
+    fig.add_scatter(
+        x=centroids_df[feature_x],
+        y=centroids_df[feature_y],
+        mode='markers',
+        marker=dict(size=15, symbol='x', color='black', line=dict(width=2, color='DarkSlateGrey')),
+        name='Centroids',
+        hoverinfo='text',
+        hovertext=[f'Centroid {i}' for i in range(len(centroids_df))]
+    )
+    return fig
+
+# Streamlit Usage: Plot k-Means if labels/centroids exist
+if 'kmeans_labels' in st.session_state and 'kmeans_centroids' in st.session_state:
+    st.subheader("k-Means Cluster Visualization:")
+    kmeans_fig = plot_kmeans_clusters(
+        original_data=st.session_state.financial_df,
+        scaled_data=st.session_state.scaled_financial_df,
+        cluster_labels=st.session_state.kmeans_labels,
+        centroids=st.session_state.kmeans_centroids,
+        feature_x='Feature_1',
+        feature_y='Feature_2'
+    )
+    st.plotly_chart(kmeans_fig)
+else:
+    st.info("Run k-Means clustering first to visualize results.")
 
 st.markdown("""
 The interactive scatter plot above visually represents the k-Means clustering results. Each point corresponds to a financial asset, colored according to its assigned cluster. The prominent 'X' markers denote the cluster centroids. By observing the plot, we can assess the compactness and separation of the clusters, and how assets with similar `Daily_Return_Volatility` and `Average_Daily_Return` characteristics are grouped together.
 """)
 ```
 
-### 4.5. Hierarchical Clustering
-
-**Streamlit Content:**
+### Section 9: Introduction to Hierarchical Clustering
+**Markdown:**
 ```python
 st.header("Section 9: Introduction to Hierarchical Clustering")
-st.markdown(r"""
+st.markdown("""
 Hierarchical Clustering, unlike k-Means, does not require a pre-specified number of clusters. Instead, it builds a tree-like structure of clusters called a dendrogram, illustrating the merging or splitting process. The most common approach is **Agglomerative Hierarchical Clustering**, which is a "bottom-up" method:
 1.  **Initialization**: Each data point starts as its own individual cluster.
-2.  **Merging**: Iteratively merge the two closest clusters until only one large cluster remains or a desired stopping criterion is met.
-The "closeness" between clusters is determined by a **linkage method**, which defines how the distance between two clusters is calculated. Common linkage methods include:
+2.  **Merging**: Iteratively merge the two closest clusters until only one large cluster remains or a desired stopping criterion is met (Figure 3 in the provided text).
+The "closeness" between clusters is determined by a **linkage method**, which defines how the distance between two clusters is calculated. Common linkage methods include [4, 5]:
 *   **Single Linkage**: Distance between the closest points in the two clusters.
 *   **Complete Linkage**: Distance between the farthest points in the two clusters.
 *   **Average Linkage**: Average distance between all points in the two clusters.
 *   **Ward Linkage**: Minimizes the variance within each merged cluster.
 
-A key output is the **dendrogram**, which visually represents the hierarchy of clusters. In finance, Hierarchical Clustering is fundamental to concepts like Hierarchical Risk Parity (HRP) for portfolio diversification, where asset relationships are inferred from a hierarchical structure to optimize capital allocation.
+A key output is the **dendrogram** (Exhibit 2), which visually represents the hierarchy of clusters. In finance, Hierarchical Clustering is fundamental to concepts like Hierarchical Risk Parity (HRP) for portfolio diversification, where asset relationships are inferred from a hierarchical structure to optimize capital allocation [5].
 """)
+```
 
+### Section 10: Implementing Hierarchical Clustering
+**Markdown:**
+```python
 st.header("Section 10: Implementing Hierarchical Clustering")
 st.markdown("""
 We will implement Agglomerative Hierarchical Clustering using `sklearn.cluster.AgglomerativeClustering`. For visualizing the clustering hierarchy, we will generate a linkage matrix using `scipy.cluster.hierarchy.linkage` which is essential for plotting the dendrogram. We'll use interactive widgets to allow users to select different `linkage methods` and observe their impact.
 """)
-
-# Code Stub: perform_hierarchical_clustering function
+```
+**Code for Hierarchical Clustering Implementation:**
+```python
+# Function Definition
 def perform_hierarchical_clustering(scaled_data, n_clusters_hc, linkage_method):
     """
     Executes Agglomerative Hierarchical Clustering and returns labels and linkage matrix.
     """
+    # Perform AgglomerativeClustering to get labels
     agg_clustering = AgglomerativeClustering(n_clusters=n_clusters_hc, linkage=linkage_method)
     hclust_labels = agg_clustering.fit_predict(scaled_data)
     
+    # Compute the linkage matrix for the dendrogram
     linkage_matrix = linkage(scaled_data, method=linkage_method)
     
     return hclust_labels, linkage_matrix
 
-# Streamlit Widgets for Hierarchical Clustering (using st.session_state)
-st.subheader("Hierarchical Clustering Parameters")
-if 'linkage_method' not in st.session_state:
-    st.session_state.linkage_method = 'ward'
-if 'n_clusters_hc' not in st.session_state:
-    st.session_state.n_clusters_hc = 4
-
-st.session_state.linkage_method = st.selectbox(
+st.subheader("Hierarchical Clustering Parameters:")
+linkage_method_hc = st.selectbox(
     'Linkage Method:',
     options=('ward', 'complete', 'average', 'single'),
-    key='linkage_method'
+    value=st.session_state.get('linkage_method_hc_value', 'ward'),
+    key='linkage_method_hc_select'
 )
-st.session_state.n_clusters_hc = st.slider(
-    'Number of Clusters (n) for Agglomerative Clustering:',
+st.session_state.linkage_method_hc_value = linkage_method_hc
+
+n_clusters_hc = st.slider(
+    'Number of Clusters (n) for Hierarchical Clustering:',
     min_value=2,
     max_value=7,
+    value=st.session_state.get('n_clusters_hc_value', 4),
     step=1,
-    key='n_clusters_hc'
+    key='n_clusters_hc_slider'
 )
+st.session_state.n_clusters_hc_value = n_clusters_hc
 
-# Perform Hierarchical Clustering
-hclust_labels, linkage_matrix_hc = perform_hierarchical_clustering(
-    scaled_financial_df, 
-    st.session_state.n_clusters_hc, 
-    st.session_state.linkage_method
-)
-st.info(f"Hierarchical Clustering performed with {st.session_state.n_clusters_hc} clusters and linkage method: {st.session_state.linkage_method}")
+if st.button("Run Hierarchical Clustering"):
+    hclust_labels, linkage_matrix_hc = perform_hierarchical_clustering(st.session_state.scaled_financial_df, n_clusters_hc, linkage_method_hc)
+    st.session_state.hclust_labels = hclust_labels
+    st.session_state.linkage_matrix_hc = linkage_matrix_hc
 
-st.subheader("Hierarchical Clustering Results")
-st.write(f"Selected Linkage Method: {st.session_state.linkage_method}")
-st.write(f"Selected Number of Clusters: {st.session_state.n_clusters_hc}")
-st.write("First 10 Hierarchical cluster labels:")
-st.write(hclust_labels[:10])
+    st.subheader("Hierarchical Clustering Results:")
+    st.write(f"Selected Linkage Method: {linkage_method_hc}")
+    st.write(f"Number of Clusters: {n_clusters_hc}")
+    st.write(f"Hierarchical Clustering Labels (first 10): {st.session_state.hclust_labels[:10]}")
+    st.write(f"Linkage Matrix (shape): {st.session_state.linkage_matrix_hc.shape}")
+else:
+    if 'hclust_labels' in st.session_state and 'linkage_matrix_hc' in st.session_state:
+        st.subheader("Hierarchical Clustering Results (from last run):")
+        st.write(f"Selected Linkage Method: {linkage_method_hc}")
+        st.write(f"Number of Clusters: {n_clusters_hc}")
+        st.write(f"Hierarchical Clustering Labels (first 10): {st.session_state.hclust_labels[:10]}")
+        st.write(f"Linkage Matrix (shape): {st.session_state.linkage_matrix_hc.shape}")
+    else:
+        st.info("Adjust parameters and click 'Run Hierarchical Clustering' to see results.")
 
 st.markdown("""
 Hierarchical clustering has been performed using the selected linkage method and number of clusters. The `hclust_labels` indicate the cluster assignment for each asset. The `linkage_matrix` is a crucial output, as it encodes the full hierarchical structure, which we will use to generate a dendrogram for visual exploration of the merging process.
 """)
+```
 
+### Section 11: Visualizing Hierarchical Clustering with a Dendrogram
+**Markdown:**
+```python
 st.header("Section 11: Visualizing Hierarchical Clustering with a Dendrogram")
 st.markdown("""
-The dendrogram is the primary visualization for Hierarchical Clustering, illustrating the sequence of merges or splits that occur during the clustering process. It's a powerful tool for discerning the natural groupings within the data and choosing an appropriate number of clusters by observing the 'height' (distance) at which merges occur.
+The dendrogram is the primary visualization for Hierarchical Clustering, illustrating the sequence of merges or splits that occur during the clustering process. It's a powerful tool for discerning the natural groupings within the data and choosing an appropriate number of clusters by observing the 'height' (distance) at which merges occur (Exhibit 2).
 
 A horizontal line across the dendrogram, representing a **cutoff distance**, can effectively define the clusters. Any vertical line (representing a cluster) that the cutoff line intersects corresponds to a distinct cluster at that distance level. We will use an interactive slider to adjust this `cutoff_distance` dynamically.
 """)
-
-# Code Stub: plot_dendrogram function
-def plot_dendrogram(linkage_matrix, cutoff_distance_input, feature_data):
+```
+**Code for Dendrogram Visualization:**
+```python
+# Function Definition
+def plot_dendrogram(linkage_matrix, cutoff_distance_input):
     """
     Generates an interactive dendrogram with an adjustable cutoff.
     """
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(12, 6)) 
     
-    # Generate dendrogram, using feature_data Asset_ID as labels
-    dendrogram(linkage_matrix,
-               leaf_rotation=90,
-               leaf_font_size=8,
-               ax=ax,
-               labels=feature_data['Asset_ID'].values,
-               color_threshold=cutoff_distance_input  # Color clusters below the cutoff
-              )
+    # Generate dendrogram, coloring clusters below the cutoff differently
+    dendrogram(
+        linkage_matrix,
+        ax=ax,
+        leaf_rotation=90.,  # rotates the x axis labels
+        leaf_font_size=8.,  # font size for the x axis labels
+        color_threshold=cutoff_distance_input, # Color clusters below this distance
+        above_threshold_color='gray' # Optionally color merges above threshold grey
+    )
     
-    ax.axhline(y=cutoff_distance_input, color='r', linestyle='--', label='Cutoff Distance')
-    ax.set_title('Hierarchical Clustering Dendrogram')
-    ax.set_xlabel('Asset ID')
+    # Draw a horizontal line at the cutoff distance
+    ax.axhline(y=cutoff_distance_input, color='r', linestyle='--', label=f'Cutoff at {cutoff_distance_input:.2f}')
+    
+    ax.set_title('Hierarchical Clustering Dendrogram with Dynamic Cutoff')
+    ax.set_xlabel('Asset Index or Cluster')
     ax.set_ylabel('Distance')
     ax.legend()
     plt.tight_layout()
-    st.pyplot(fig) # Use st.pyplot for matplotlib figures
+    return fig
 
-# Streamlit Widget for Dendrogram Cutoff
-st.subheader("Dendrogram Visualization Controls")
-if 'cutoff_distance' not in st.session_state:
-    st.session_state.cutoff_distance = 6.0
+# Streamlit Usage: Plot Dendrogram
+if 'linkage_matrix_hc' in st.session_state:
+    st.subheader("Hierarchical Clustering Dendrogram:")
+    cutoff_distance = st.slider(
+        'Dendrogram Cutoff Distance:',
+        min_value=0.0,
+        max_value=15.0,
+        value=st.session_state.get('cutoff_distance_value', 6.0),
+        step=0.5,
+        key='cutoff_distance_slider'
+    )
+    st.session_state.cutoff_distance_value = cutoff_distance
+    
+    dendrogram_fig = plot_dendrogram(st.session_state.linkage_matrix_hc, cutoff_distance)
+    st.pyplot(dendrogram_fig)
+    plt.close(dendrogram_fig) # Close the figure to prevent display issues on rerun
+else:
+    st.info("Run Hierarchical Clustering first to generate the dendrogram.")
 
-st.session_state.cutoff_distance = st.slider(
-    'Dendrogram Cutoff Distance:',
-    min_value=0.0,
-    max_value=15.0,
-    step=0.5,
-    key='cutoff_distance'
-)
-
-# Plot Dendrogram
-plot_dendrogram(
-    linkage_matrix=linkage_matrix_hc,
-    cutoff_distance_input=st.session_state.cutoff_distance,
-    feature_data=financial_df
-)
+st.markdown("""
+The interactive dendrogram above provides a visual map of the hierarchical clustering process. Each merge is represented by a horizontal line, and the height of the line indicates the distance between the merged clusters. The dynamic red horizontal line represents the `Cutoff Distance`. By moving this slider, you can effectively "cut" the dendrogram at different height levels, observing how the number and composition of clusters change. This helps in deciding a suitable number of clusters based on the natural groupings suggested by the data's structure.
+""")
 ```
 
-### 4.6. Cluster Evaluation and Financial Applications
-
-**Streamlit Content:**
+### Section 12: Cluster Evaluation: Silhouette Score
+**Markdown:**
 ```python
-st.header("Section 12: Cluster Evaluation Techniques")
-st.markdown(r"""
-Although many clustering algorithms require positing the number of clusters, techniques have been developed that allow the user to determine the most suitable clustering scheme. Two techniques in particular have become popular. The first is the silhouette score, an internal clustering evaluation metric that measures how similar each point is to points in its own cluster compared with points in other clusters, providing both individual point scores and an overall clustering quality measure. For each data point, the silhouette coefficient is calculated as $(b - a) / \\max(a, b)$, where $a$ is the mean distance to other points in the same cluster (intracluster distance) and $b$ is the mean distance to points in the nearest neighboring cluster (intercluster distance). The silhouette coefficient ranges from -1 to 1. Values close to 1 indicate that the point is well matched to its cluster and poorly matched to neighboring clusters, values around 0 suggest that the point is on or very close to the decision boundary between clusters, and negative values indicate that the point might have been assigned to the wrong cluster.
+st.header("Section 12: Cluster Evaluation: Silhouette Score")
+st.markdown("""
+To quantitatively assess the quality of our clustering results, we use evaluation metrics. The **Silhouette Score** is an internal validation metric that measures how similar an object is to its own cluster (cohesion) compared to other clusters (separation) [6, 7]. It ranges from -1 to 1:
+*   Values close to +1 indicate that data points are well-matched to their own cluster and poorly matched to neighboring clusters (good clustering).
+*   Values around 0 indicate overlapping clusters or points that are on or very close to the decision boundary.
+*   Values close to -1 suggest that data points might have been assigned to the wrong cluster.
 
-The mathematical foundation of the silhouette score relies on distance-based cohesion and separation measures. For a point $i$ in cluster $C$, the intracluster distance, $a(i)$, represents the average distance between point $i$ and all other points in the same cluster, measuring cluster cohesion. The intercluster distance, $b(i)$, is the minimum average distance from point $i$ to points in any other cluster, measuring cluster separation. The silhouette coefficient, $s(i) = [b(i) - a(i)] / \\max[a(i), b(i)]$, provides a normalized measure that balances cohesion and separation, with higher values indicating better clustering quality.
-
-The second popular cluster evaluation technique, the Adjusted Rand Index (ARI), introduced by Hubert and Arabie (1985), builds on the measure introduced by Rand (1971) and is a more explicitly probabilistic measure of cluster uniqueness. Two important characteristics distinguish an ARI value from a silhouette score. The first is that a Rand Index value is relational. Whereas a silhouette score tells us how tight a particular clustering scheme is, an ARI value ranges from -1 to 1 and tells us how similar two clustering schemes are. A value of 0 represents two independent clusters, and a value of 1 represents identical clusters. Negative values indicate worse-than-random clustering. Accordingly, the second distinguishing characteristic of an ARI value is that lower values indicate more unique pairs of clustering schemes. The metric is particularly valuable because it adjusts for the expected similarity that would occur by chance alone, making it more reliable than the basic Rand Index when comparing clusterings with different numbers of clusters or when dealing with imbalanced cluster sizes.
-
-The mathematical foundation of the original Rand Index begins with the contingency table, which cross-tabulates the cluster assignments from two different clusterings. Given two clusterings $U = \\{U_1, U_2, ..., U_r\\}$ and $V = \\{V_1, V_2, ..., V_s\\}$, the contingency table entry $n_{ij}$ represents the number of objects that are in both cluster $U_i$ and cluster $V_j$. The Rand Index is calculated by counting the number of pairs of objects that are either in the same cluster in both clusterings or in different clusters in both clusterings and dividing by the total number of pairs. This raw measure does not account for the expected agreement that would occur by random chance, however, which is where the adjustment becomes crucial. The mathematical formula for ARI can be expressed as $ARI = (RI - Expected_{RI}) / [\\max(RI) - Expected_{RI}]$, where $RI$ is the Rand Index, $Expected_{RI}$ is the expected value of the Rand Index under the null hypothesis of random clustering, and $\\max(RI)$ is the maximum possible value of the Rand Index. This adjustment ensures that the expected value of ARI is zero when clusterings are independent, making it a more interpretable measure than the raw Rand Index.
+For each data point $i$, the silhouette coefficient $s(i)$ is calculated as:
+$$ s(i) = \\frac{b(i) - a(i)}{\\max[a(i), b(i)]} $$
+where:
+*   $a(i)$ is the mean distance between $i$ and all other data points in the same cluster (mean intracluster distance).
+*   $b(i)$ is the minimum mean distance between $i$ and all data points in any other cluster (mean intercluster distance to the nearest neighboring cluster).
+The overall Silhouette Score for the clustering is the average $s(i)$ over all data points.
 """)
+```
+**Code for Silhouette Score:**
+```python
+# Function Definition
+def calculate_silhouette_score(scaled_data, cluster_labels):
+    """
+    Computes the Silhouette Score.
+    """
+    # Ensure there are at least 2 clusters and more than 1 sample for silhouette_score to be valid
+    if len(np.unique(cluster_labels)) < 2 or len(scaled_data) <= 1:
+        return np.nan # Use NaN for invalid scores
+    return silhouette_score(scaled_data, cluster_labels)
 
-st.subheader("Evaluation Metrics for k-Means Clustering")
-kmeans_silhouette = silhouette_score(scaled_financial_df, kmeans_labels)
-kmeans_ari = adjusted_rand_score(y_true_labels, kmeans_labels) # Using true labels as benchmark
+st.subheader("Silhouette Scores:")
+kmeans_silhouette = np.nan
+hclust_silhouette = np.nan
 
-st.write(f"**k-Means Silhouette Score:** {kmeans_silhouette:.4f}")
-st.write(f"**k-Means Adjusted Rand Index (ARI):** {kmeans_ari:.4f}")
+if 'kmeans_labels' in st.session_state:
+    kmeans_silhouette = calculate_silhouette_score(st.session_state.scaled_financial_df, st.session_state.kmeans_labels)
+    st.write(f"k-Means Silhouette Score: {kmeans_silhouette:.3f}")
+else:
+    st.write("k-Means Silhouette Score: N/A (Run k-Means first)")
 
-st.subheader("Evaluation Metrics for Hierarchical Clustering")
-hclust_silhouette = silhouette_score(scaled_financial_df, hclust_labels)
-hclust_ari = adjusted_rand_score(y_true_labels, hclust_labels) # Using true labels as benchmark
+if 'hclust_labels' in st.session_state:
+    hclust_silhouette = calculate_silhouette_score(st.session_state.scaled_financial_df, st.session_state.hclust_labels)
+    st.write(f"Hierarchical Clustering Silhouette Score: {hclust_silhouette:.3f}")
+else:
+    st.write("Hierarchical Clustering Silhouette Score: N/A (Run Hierarchical Clustering first)")
 
-st.write(f"**Hierarchical Clustering Silhouette Score:** {hclust_silhouette:.4f}")
-st.write(f"**Hierarchical Clustering Adjusted Rand Index (ARI):** {hclust_ari:.4f}")
+st.session_state.kmeans_silhouette = kmeans_silhouette
+st.session_state.hclust_silhouette = hclust_silhouette
 
 st.markdown("""
-Here, we calculate and display the Silhouette Score and Adjusted Rand Index for both k-Means and Hierarchical Clustering. The Silhouette Score measures how similar an object is to its own cluster compared to other clusters. The Adjusted Rand Index measures the similarity between the true (latent) clusters and the predicted clusters, adjusting for chance. Higher values for both metrics generally indicate better clustering quality.
+We have calculated the Silhouette Scores for both k-Means and Hierarchical Clustering. A higher silhouette score generally indicates better-defined and more separated clusters. These scores provide a quantitative measure of how well each algorithm grouped the financial assets based on their characteristics.
+""")
+```
+
+### Section 13: Cluster Evaluation: Adjusted Rand Index (ARI)
+**Markdown:**
+```python
+st.header("Section 13: Cluster Evaluation: Adjusted Rand Index (ARI)")
+st.markdown("""
+The **Adjusted Rand Index (ARI)** is an external evaluation metric that measures the similarity between two clusterings, accounting for chance [7]. It is typically used when true labels (ground truth) are available, or to compare the similarity between the outputs of different clustering algorithms on the same dataset. The ARI ranges from -1 to 1:
+*   A value of 1 indicates perfect agreement between the two clusterings.
+*   A value of 0 indicates that the clusterings are independent (random labeling).
+*   Negative values indicate worse-than-random agreement.
+
+Since our synthetic dataset includes `True_Cluster` labels, we can use the ARI to compare how well our algorithms recover these underlying groups. The formula for ARI is:
+$$
+ARI = \\frac{RI - Expected_{RI}}{\\max(RI) - Expected_{RI}}
+$$
+where $RI$ is the Rand Index, and $Expected_{RI}$ is its expected value under a null hypothesis of random clustering [7].
+""")
+```
+**Code for Adjusted Rand Index:**
+```python
+# Function Definition
+def calculate_adjusted_rand_index(labels_true, labels_pred):
+    """
+    Computes the Adjusted Rand Index.
+    """
+    # Check if there's enough variety for meaningful ARI
+    if len(np.unique(labels_true)) < 2 or len(np.unique(labels_pred)) < 2 or len(labels_true) < 2:
+        return np.nan
+    return adjusted_rand_score(labels_true, labels_pred)
+
+st.subheader("Adjusted Rand Index (ARI) Scores:")
+kmeans_ari = np.nan
+hclust_ari = np.nan
+inter_algo_ari = np.nan
+
+if 'kmeans_labels' in st.session_state:
+    kmeans_ari = calculate_adjusted_rand_index(st.session_state.y_true_labels, st.session_state.kmeans_labels)
+    st.write(f"k-Means Adjusted Rand Index (vs True Labels): {kmeans_ari:.3f}")
+else:
+    st.write("k-Means Adjusted Rand Index (vs True Labels): N/A (Run k-Means first)")
+
+if 'hclust_labels' in st.session_state:
+    hclust_ari = calculate_adjusted_rand_index(st.session_state.y_true_labels, st.session_state.hclust_labels)
+    st.write(f"Hierarchical Clustering Adjusted Rand Index (vs True Labels): {hclust_ari:.3f}")
+else:
+    st.write("Hierarchical Clustering Adjusted Rand Index (vs True Labels): N/A (Run Hierarchical Clustering first)")
+
+if 'kmeans_labels' in st.session_state and 'hclust_labels' in st.session_state:
+    inter_algo_ari = calculate_adjusted_rand_index(st.session_state.kmeans_labels, st.session_state.hclust_labels)
+    st.write(f"Adjusted Rand Index (k-Means vs Hierarchical Clustering): {inter_algo_ari:.3f}")
+else:
+    st.write("Adjusted Rand Index (k-Means vs Hierarchical Clustering): N/A (Run both algorithms first)")
+
+st.session_state.kmeans_ari = kmeans_ari
+st.session_state.hclust_ari = hclust_ari
+st.session_state.inter_algo_ari = inter_algo_ari
+
+st.markdown("""
+The Adjusted Rand Index scores provide a measure of similarity between our clustering results and the ground truth clusters, as well as between the two algorithms themselves. A higher ARI value, especially when compared to the `True_Cluster` labels, indicates that the algorithm successfully identified the underlying patterns in the data. Comparing the ARI between k-Means and Hierarchical Clustering also sheds light on how similarly these two distinct approaches group the assets.
+""")
+```
+
+### Section 14: Comparing Clustering Results
+**Markdown and Code:**
+```python
+st.header("Section 14: Comparing Clustering Results")
+st.markdown("""
+Having evaluated both k-Means and Hierarchical Clustering using Silhouette Score and Adjusted Rand Index, we can now compare their performance. This comparison helps in understanding which algorithm might be more suitable for a given financial data analysis task.
+
+In our case, the `True_Cluster` labels from the synthetic data generation provide an ideal benchmark for ARI. The Silhouette Score offers an intrinsic measure of cluster quality regardless of ground truth.
 """)
 
-st.header("Section 13: Financial Applications Discussion")
+st.subheader("Comparison Table:")
+comparison_data = {
+    "Clustering Algorithm": ["k-Means", "Hierarchical Clustering"],
+    "Silhouette Score": [
+        f"{st.session_state.kmeans_silhouette:.3f}" if not np.isnan(st.session_state.kmeans_silhouette) else "N/A",
+        f"{st.session_state.hclust_silhouette:.3f}" if not np.isnan(st.session_state.hclust_silhouette) else "N/A"
+    ],
+    "Adjusted Rand Index (vs True Labels)": [
+        f"{st.session_state.kmeans_ari:.3f}" if not np.isnan(st.session_state.kmeans_ari) else "N/A",
+        f"{st.session_state.hclust_ari:.3f}" if not np.isnan(st.session_state.hclust_ari) else "N/A"
+    ]
+}
+comparison_df = pd.DataFrame(comparison_data)
+st.dataframe(comparison_df.set_index("Clustering Algorithm"))
+
+if not np.isnan(st.session_state.inter_algo_ari):
+    st.write(f"\nAdjusted Rand Index (k-Means vs Hierarchical Clustering): {st.session_state.inter_algo_ari:.3f}")
+else:
+    st.write("\nAdjusted Rand Index (k-Means vs Hierarchical Clustering): N/A (Run both algorithms first)")
+
 st.markdown("""
-A well-known investment application of hierarchical clustering is Hierarchical Risk Parity (HRP), introduced by López de Prado (2016). HRP uses hierarchical clustering to infer relationships between assets, which are then used directly for portfolio diversification, addressing three major concerns of quadratic optimizers: instability, concentration, and underperformance. The approach departs from classical mean-variance optimization by using a three-step process that organizes assets into hierarchical clusters based on their correlation structure, reorganizes the correlation matrix according to this tree structure, and then allocates capital recursively through the hierarchy using inverse variance weighting within each cluster.
+From the comparison, we can observe the strengths and weaknesses of each clustering algorithm on our synthetic financial dataset. For instance, one algorithm might yield better separation (higher Silhouette Score) while another might more accurately recover the predefined latent groups (higher ARI). This comprehensive evaluation guides us in selecting the most appropriate clustering approach for specific financial analysis needs.
+""")
+```
 
-Clustering in finance can be applied to:
-*   **Portfolio Construction:** Grouping assets with similar risk-return profiles, trend characteristics, or sensitivities to market factors can lead to more diversified and robust portfolios.
-*   **Risk Management:** Identifying clusters of assets that behave similarly under stress can help in understanding systemic risk and designing hedging strategies.
-*   **Market Segmentation:** Discovering natural groupings of stocks, bonds, or other instruments can reveal underlying market regimes or sector structures.
-*   **Anomaly Detection:** Outlier clusters might indicate unusual market behavior or potential fraud, though dedicated anomaly detection algorithms like Isolation Forest or Local Outlier Factor (LOF) (mentioned below) are often more suitable.
+### Section 15: Financial Application: Portfolio Construction with k-Means
+**Markdown:**
+```python
+st.header("Section 15: Financial Application: Portfolio Construction with k-Means")
+st.markdown("""
+In financial markets, k-Means clustering offers a practical approach to **portfolio construction**. As highlighted by Wu, Wang, and Wu (2022) [1], clustering stocks based on their continuous trend characteristics allows for the identification of groups of assets that exhibit similar market behaviors.
 
-## Further Unsupervised Learning Techniques (Not Implemented)
+By categorizing assets into distinct clusters, financial data engineers can:
+*   **Diversification**: Ensure that a portfolio includes assets from different clusters to achieve better diversification, reducing idiosyncratic risk.
+*   **Strategic Allocation**: Allocate capital based on the characteristics of each cluster. For example, assets within a "high growth, high volatility" cluster might be treated differently from those in a "stable income, low volatility" cluster.
+*   **Risk Management**: Monitor clusters for unusual behavior. If all assets within a particular cluster show signs of distress, it could indicate a sector-specific risk or a broader market trend affecting that asset group.
 
-While this application focuses on k-Means and Hierarchical Clustering, the field of unsupervised learning offers many other powerful techniques relevant to finance:
+This enables a more informed and data-driven approach to constructing and managing investment portfolios, moving beyond traditional sector classifications to behavior-based groupings.
+""")
+```
 
-### Dimension Reduction Techniques
-Finance is a data-driven enterprise. Indeed, the sheer size of data processed and the number of variables considered in financial applications may at times test the limits of mathematical models and information technology infrastructure. Given this fact, reducing the dimensions of a problem when possible is a critical aspect of any investment process.
+### Section 16: Financial Application: Hierarchical Risk Parity (HRP) with Hierarchical Clustering
+**Markdown:**
+```python
+st.header("Section 16: Financial Application: Hierarchical Risk Parity (HRP) with Hierarchical Clustering")
+st.markdown("""
+Hierarchical Clustering finds a significant application in advanced portfolio management, particularly in the context of **Hierarchical Risk Parity (HRP)**, as introduced by López de Prado (2016) [5]. HRP is an alternative to traditional mean-variance optimization, aiming to build more robust and diversified portfolios.
 
-**Principal Component Analysis (PCA):** This technique transforms high-dimensional data into a lower-dimensional space while preserving maximum variance. PCA works by finding the principal components, which are orthogonal directions in the feature space that capture the most variance. In finance, PCA is famously used to decompose the yield curve into components like `level`, `slope`, and `curvature`.
+HRP leverages the hierarchical structure revealed by clustering to address common issues in portfolio optimization, such as instability and concentration. The process typically involves:
+1.  **Hierarchical Grouping**: Apply hierarchical clustering (often based on asset correlation) to group assets into a dendrogram structure.
+2.  **Quasi-Diagonalization**: Reorder the correlation matrix according to the dendrogram, revealing block-like structures of highly correlated assets.
+3.  **Recursive Bisection**: Recursively allocate capital through the hierarchy, inverse-variance weighting within each identified cluster. This ensures that risk is balanced not only at the overall portfolio level but also within nested clusters.
 
-**t-distributed Stochastic Neighbor Embedding (t-SNE):** A powerful dimension reduction technique used to visualize high-dimensional data in 2D or 3D. It is particularly effective for exploring complex datasets and identifying clusters or patterns that might not be apparent in raw data. In finance, t-SNE can be applied to analyze and visualize market segmentation, such as grouping stocks or assets based on their historical performance, risk profiles, or other features.
+This method is particularly valuable for achieving better diversification and managing risk by reflecting the true, often complex, interdependencies between financial instruments, which might not be apparent in a flat (non-hierarchical) view of the market.
+""")
+```
 
-### Deep Learning Approaches
-**Autoencoders:** Neural networks designed to learn efficient data representations in an unsupervised manner by training the network to reconstruct its input data. Applications include dimensionality reduction, denoising, feature learning, and data compression. Variations like **Variational Autoencoders (VAEs)** can generate realistic synthetic data.
+### Section 17: Conclusion
+**Markdown:**
+```python
+st.header("Section 17: Conclusion")
+st.markdown("""
+This application has provided a comprehensive exploration of two fundamental unsupervised clustering techniques: k-Means and Hierarchical Clustering. We've walked through the process of generating synthetic financial asset data, preprocessing it, implementing both algorithms with interactive parameter adjustments, visualizing their results, and evaluating their performance using the Silhouette Score and Adjusted Rand Index.
 
-**Generative Adversarial Networks (GANs):** A class of generative models that use a game-theoretic framework to learn and generate new data that mimic the distribution of a given dataset. GANs are widely used in finance for tasks that involve generating realistic synthetic data, modeling complex distributions, and simulating market scenarios.
+For Financial Data Engineers, understanding and applying these methods are crucial for:
+*   **Identifying underlying asset classes**: Moving beyond conventional sector definitions to data-driven groupings.
+*   **Enhancing portfolio diversification**: Constructing portfolios that are robust to market shifts by combining assets from distinct behavioral clusters.
+*   **Informing risk management**: Gaining deeper insights into interconnected asset behaviors and systemic risks.
 
-### Anomaly Detection
-Anomaly detection is an important part of finance because extreme outliers, such as stock market crashes, can have outsized financial and economic implications. Dedicated algorithms for outlier detection include:
-
-**Isolation Forest:** Uses decision trees to isolate anomalies by randomly selecting features and splitting the data. Anomalies require fewer splits to be isolated.
-
-**Local Outlier Factor (LOF):** Detects anomalies by comparing how densely packed each point is relative to its local neighborhood. Outliers exist in sparser regions compared with their neighbors.
-
-## Conclusion
-
-This application provided an overview of some major unsupervised learning algorithms along with examples of how they are applied in various areas of finance. We have shown that unsupervised learning plays a major role in classification, anomaly detection, and synthetic data generation—all major application areas in finance.
+By mastering these unsupervised learning techniques, you are better equipped to navigate the complexities of financial data, uncover valuable insights, and make more informed decisions in portfolio management and risk assessment. The ability to interactively adjust parameters and evaluate results empowers you to tailor these powerful tools to diverse financial analysis challenges.
 """)
 ```
